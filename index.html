@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SearchHub - Multi-Engine Search Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4285f4;
+            --secondary: #34a853;
+            --accent: #ea4335;
+            --highlight: #fbbc05;
+            --dark: #202124;
+            --light: #f8f9fa;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        
+        .tagline {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+        }
+        
+        .search-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-engine {
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .search-engine:hover {
+            background: #e8f0fe;
+            border-color: var(--primary);
+        }
+        
+        .search-engine.active {
+            background: #e8f0fe;
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .search-engine i {
+            margin-right: 0.5rem;
+        }
+        
+        .search-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .search-btn:hover {
+            background: #3367d6;
+        }
+        
+        .search-btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .voice-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .voice-btn:hover {
+            color: #3367d6;
+        }
+        
+        .voice-btn.listening {
+            color: var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+        
+        .results-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .results-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .results-engine {
+            display: flex;
+            align-items: center;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .results-engine i {
+            margin-right: 0.5rem;
+        }
+        
+        .result-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+            cursor: pointer;
+        }
+        
+        .result-title:hover {
+            text-decoration: underline;
+        }
+        
+        .result-url {
+            font-size: 0.9rem;
+            color: #006621;
+            margin-bottom: 0.3rem;
+        }
+        
+        .result-description {
+            color: #545454;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .loading i {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: #777;
+        }
+        
+        .no-results i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+        
+        .shortcuts {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-top: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .shortcut-item:hover {
+            background: #f5f7fa;
+        }
+        
+        .shortcut-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .shortcut-name {
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .google { background: #4285f4; color: white; }
+        .youtube { background: #ff0000; color: white; }
+        .wikipedia { background: #000; color: white; }
+        .amazon { background: #ff9900; color: white; }
+        .twitter { background: #1da1f2; color: white; }
+        .github { background: #333; color: white; }
+        
+        .search-input-container {
+            position: relative;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.8rem;
+        }
+        
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .search-container, .results-container, .shortcuts {
+                padding: 1rem;
+            }
+            
+            .shortcut-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">SearchHub</div>
+        <div class="tagline">Search multiple engines from one place</div>
+    </header>
+    
+    <main>
+        <div class="search-container">
+            <div class="search-input-container">
+                <input type="text" class="search-box" id="searchInput" placeholder="Search the web...">
+                <button class="voice-btn" id="voiceBtn" title="Voice Search">
+                    <i class="fas fa-microphone"></i>
+                </button>
+            </div>
+            
+            <div class="search-options">
+                <div class="search-engine active" data-engine="google">
+                    <i class="fab fa-google"></i> Google
+                </div>
+                <div class="search-engine" data-engine="bing">
+                    <i class="fab fa-microsoft"></i> Bing
+                </div>
+                <div class="search-engine" data-engine="duckduckgo">
+                    <i class="fab fa-duckduckgo"></i> DuckDuckGo
+                </div>
+                <div class="search-engine" data-engine="yahoo">
+                    <i class="fab fa-yahoo"></i> Yahoo
+                </div>
+            </div>
+            
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+        
+        <div class="results-container" id="resultsContainer">
+            <div class="results-header">
+                <div class="results-title">Search Results</div>
+                <div class="results-engine" id="resultsEngine">
+                    <i class="fab fa-google"></i> Google
+                </div>
+            </div>
+            <div id="resultsContent">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+        
+        <div class="shortcuts">
+            <div class="section-title">
+                <i class="fas fa-bolt"></i> Quick Shortcuts
+            </div>
+            <div class="shortcut-grid">
+                <div class="shortcut-item" data-url="https://www.google.com">
+                    <div class="shortcut-icon google"><i class="fab fa-google"></i></div>
+                    <div class="shortcut-name">Google</div>
+                </div>
+                <div class="shortcut-item" data-url="https://www.youtube.com">
+                    <div class="shortcut-icon youtube"><i class="fab fa-youtube"></i></div>
+                    <div class="shortcut-name">YouTube</div>
+                </div>
+                <div class="shortcut-item" data-url="https://www.wikipedia.org">
+                    <div class="shortcut-icon wikipedia"><i class="fab fa-wikipedia-w"></i></div>
+                    <div class="shortcut-name">Wikipedia</div>
+                </div>
+                <div class="shortcut-item" data-url="https://www.amazon.com">
+                    <div class="shortcut-icon amazon"><i class="fab fa-amazon"></i></div>
+                    <div class="shortcut-name">Amazon</div>
+                </div>
+                <div class="shortcut-item" data-url="https://twitter.com">
+                    <div class="shortcut-icon twitter"><i class="fab fa-twitter"></i></div>
+                    <div class="shortcut-name">Twitter</div>
+                </div>
+                <div class="shortcut-item" data-url="https://github.com">
+                    <div class="shortcut-icon github"><i class="fab fa-github"></i></div>
+                    <div class="shortcut-name">GitHub</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div>© 2023 SearchHub - Fast Multi-Engine Search Tool</div>
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+        </div>
+      </footer>
+      <script>
+    // DOM elements
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsContent = document.getElementById('resultsContent');
+    const resultsEngine = document.getElementById('resultsEngine');
+    const searchEngines = document.querySelectorAll('.search-engine');
+    const shortcutItems = document.querySelectorAll('.shortcut-item');
+    
+    // Current selected search engine
+    let currentEngine = 'google';
+    
+    // Search engine configurations
+    const engineConfig = {
+        google: {
+            name: 'Google',
+            icon: 'fab fa-google',
+            apiUrl: 'https://api.example.com/google-search' // Replace with actual API endpoint
+        },
+        bing: {
+            name: 'Bing',
+            icon: 'fab fa-microsoft',
+            apiUrl: 'https://api.example.com/bing-search' // Replace with actual API endpoint
+        },
+        duckduckgo: {
+            name: 'DuckDuckGo',
+            icon: 'fab fa-duckduckgo',
+            apiUrl: 'https://api.example.com/duckduckgo-search' // Replace with actual API endpoint
+        },
+        yahoo: {
+            name: 'Yahoo',
+            icon: 'fab fa-yahoo',
+            apiUrl: 'https://api.example.com/yahoo-search' // Replace with actual API endpoint
+        }
+    };
+    
+    // Mock search results for demonstration
+    const mockResults = [
+        {
+            title: 'Example Search Result 1',
+            url: 'https://example.com/result1',
+            description: 'This is a sample search result that demonstrates how the search results would appear in the SearchHub tool.'
+        },
+        {
+            title: 'Example Search Result 2',
+            url: 'https://example.com/result2',
+            description: 'Another example of a search result that would be displayed when using the SearchHub multi-engine search tool.'
+        },
+        {
+            title: 'Example Search Result 3',
+            url: 'https://example.com/result3',
+            description: 'This is the third example search result. In a real implementation, these would be actual search results from the selected search engine.'
+        },
+        {
+            title: 'Example Search Result 4',
+            url: 'https://example.com/result4',
+            description: 'The fourth example shows how multiple search results would be displayed in a clean, mobile-friendly format.'
+        },
+        {
+            title: 'Example Search Result 5',
+            url: 'https://example.com/result5',
+            description: 'This final example demonstrates the appearance of the last search result in the list.'
+        }
+    ];
+    
+    // Perform search
+    function performSearch() {
+        const query = searchInput.value.trim();
+        
+        if (!query) {
+            searchInput.focus();
+            return;
+        }
+        
+        // Show results container
+        resultsContainer.style.display = 'block';
+        
+        // Update results engine info
+        const engine = engineConfig[currentEngine];
+        resultsEngine.innerHTML = `<i class="${engine.icon}"></i> ${engine.name}`;
+        
+        // Show loading indicator
+        resultsContent.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+        
+        // Scroll to results
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        
+        // Simulate API call with timeout
+        setTimeout(() => {
+            // In a real implementation, you would make an actual API call here
+            // fetch(`${engineConfig[currentEngine].apiUrl}?q=${encodeURIComponent(query)}`)
+            //   .then(response => response.json())
+            //   .then(data => displayResults(data))
+            //   .catch(error => showError(error));
+            
+            // For demonstration, we'll use mock results
+            displayResults(mockResults);
+        }, 1000); // Simulate network delay
+    }
+    
+    // Display search results
+    function displayResults(results) {
+        if (!results || results.length === 0) {
+            resultsContent.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>No results found for your search</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        results.forEach(result => {
+            html += `
+                <div class="result-item">
+                    <div class="result-title" onclick="window.open('${result.url}', '_blank')">${result.title}</div>
+                    <div class="result-url">${result.url}</div>
+                    <div class="result-description">${result.description}</div>
+                </div>
+            `;
+        });
+        
+        resultsContent.innerHTML = html;
+    }
+    
+    // Show error message
+    function showError(error) {
+        resultsContent.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading search results</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">${error.message || 'Please try again later'}</p>
+            </div>
+        `;
+    }
+    
+    // Event listeners
+    searchBtn.addEventListener('click', performSearch);
+    
+    searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+    
+    // Search engine selection
+    searchEngines.forEach(engine => {
+        engine.addEventListener('click', () => {
+            searchEngines.forEach(e => e.classList.remove('active'));
+            engine.classList.add('active');
+            currentEngine = engine.dataset.engine;
+        });
+    });
+    
+    // Voice search
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = () => {
+            voiceBtn.classList.add('listening');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+        };
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            searchInput.value = transcript;
+            performSearch();
+        };
+        
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            voiceBtn.classList.remove('listening');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        };
+        
+        recognition.onend = () => {
+            voiceBtn.classList.remove('listening');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        };
+        
+        voiceBtn.addEventListener('click', () => {
+            if (voiceBtn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    } else {
+        // Hide voice button if not supported
+        voiceBtn.style.display = 'none';
+    }
+    
+    // Shortcut clicks
+    shortcutItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const url = item.dataset.url;
+            window.open(url, '_blank');
+        });
+    });
+    
+    // Focus search input on load
+    searchInput.focus();
+</script>
+</body>
+</html>
